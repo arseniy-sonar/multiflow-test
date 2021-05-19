@@ -1,1 +1,4 @@
 env.sh
+build_wrapper_output_directory
+*.o
+.scannerwork
