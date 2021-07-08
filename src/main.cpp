@@ -297,3 +297,67 @@ static char *coolsize(off_t size)
 	size_buf[ret + 1] = '\0';
 	return size_buf;
 }
+
+// copy of the issue:
+// https://peach.sonarsource.com/project/issues?id=c-family%3Atdengine&issues=AXdpxT2Cw2MzS5OY17Hr&open=AXdpxT2Cw2MzS5OY17Hr
+
+struct SGlobalCfg {
+  void* ptr;
+  int ptrLength;
+  char* option;
+  int cfgStatus;
+};
+
+struct wordexp_t {
+  void** we_wordv;
+};
+
+template<class... Args>
+void uError(Args... args);
+int errno;
+char* strerror(int err);
+
+#define TAOS_CFG_CSTATUS_FILE 1
+#define NULL nullptr
+
+template <class... Args>
+void printf(Args... args);
+
+void wordfree(wordexp_t* arg);
+int wordexp(char* arg1, wordexp_t* arg2, int arg3);
+
+char *realpath(const char *path, char *resolved_path);
+
+static bool taosReadDirectoryConfig(SGlobalCfg *cfg, char *input_value) {
+  int length = (int)strlen(input_value);
+  char *option = (char *)cfg->ptr;
+  if (length <= 0 || length > cfg->ptrLength) {
+    uError("config option:%s, input value:%s, length out of range[0, %d], use "
+           "default value:%s",
+           cfg->option,
+           input_value, cfg->ptrLength, option);
+    return false;
+  } else {
+    if (cfg->cfgStatus <= TAOS_CFG_CSTATUS_FILE) {
+      wordexp_t full_path;
+      if (0 != wordexp(input_value, &full_path, 0)) {
+        printf("\nconfig dir: %s wordexp fail! reason:%s\n", input_value,
+               strerror(errno));
+        wordfree(&full_path);
+        return false;
+      }
+      if (full_path.we_wordv != NULL && full_path.we_wordv[0] != NULL) {
+        // Whatever
+      }
+
+      wordfree(&full_path);
+      char tmp[1025] = {0};
+
+      if (realpath(option, tmp) != NULL) {
+        // Whatever
+      }
+      // Whatever
+    }
+  }
+  return false;
+}
